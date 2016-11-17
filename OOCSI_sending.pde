@@ -4,19 +4,65 @@ import java.io.*;
 
   OOCSI oocsi;
   String server_ip = "oocsi.id.tue.nl";
-  int server_port = 4444;
-  String my_ip=getIP();
+  String my_ip="Server";
+  
+  int MODE = 3;
+  int numFinish =0;
+  int numTotal = 5;
+  
   void setup(){
     connectOOCSI();
-    sendMessage();
   }
   
+  void draw(){
+    //String lines[] = loadStrings("../command");
+    /*for (int i = 0 ; i < lines.length; i++) {
+      String cmd[] = lines[i].split(":");
+      sendMessage(cmd[0],cmd[1]);
+    }*/
+    if(MODE == 1){
+      sendMessage("setMode",Integer.toString(MODE));
+      MODE *= -1;
+    } else if(MODE ==-1 && numFinish>=numTotal){
+      sendMessage("setMode",Integer.toString(MODE)); 
+      MODE = 0;
+    } else if(MODE == 2 && numFinish<numTotal){
+      sendMessage("setMode",Integer.toString(MODE)+"_"+(numFinish+1));
+    } else if(MODE == 2 && numFinish>=numTotal){
+      sendMessage("setMode",Integer.toString(MODE)); 
+      MODE = 0;
+    } else if(MODE == 3){
+      sendMessage("setMode",Integer.toString(MODE)); 
+      MODE *= -1;
+    } else if(MODE == -3 && numFinish<numTotal){
+      sendMessage("setMode",Integer.toString(MODE)); 
+    } else if(MODE == -3 && numFinish>=numTotal){
+      sendMessage("setMode","3_2");
+      MODE=0;
+    } else if(MODE == 4){
+      sendMessage("setMode",Integer.toString(MODE)); 
+      MODE *= -1;
+    } else if(MODE == -4 && numFinish<numTotal){
+      sendMessage("setMode",Integer.toString(MODE)); 
+    } else if(MODE == -4 && numFinish>=numTotal){
+      sendMessage("setMode","4_2");
+      MODE=0;
+    } else if(MODE == 5){
+      sendMessage("setMode",Integer.toString(MODE)); 
+      MODE *= -1;
+    }  else if(MODE == -5 && numFinish>=numTotal){
+      sendMessage("setMode",Integer.toString(MODE)); 
+      //MODE = 0;
+    } 
+    delay(5000);
+  }
   void connectOOCSI(){
     // OOCSI channel connect
-    oocsi = new OOCSI(this,server_ip, server_ip,server_port);
+    oocsi = new OOCSI(this,my_ip, server_ip);
+    oocsi.subscribe(server_ip);
   }
   
- boolean sendMessage(OOCSI oocsi,String function_name , String msg){
+ boolean sendMessage(String function_name , String msg){
     try{
       oocsi.channel(server_ip)
         .data("sender_ip", my_ip)
@@ -28,44 +74,18 @@ import java.io.*;
       return false;
     }
   }
-  private BufferedReader commandLine(String s){
-    try{
-      Process p = Runtime.getRuntime().exec(s, null, new File("/Users/"));
-      return new BufferedReader(new InputStreamReader(p.getInputStream()));
-    } catch(Exception e){
-      println("Error running command!");  
-      println(e);
-    }
-    return null;
-  }
-  private String getIP(){
-  String prefex = "    inet "; 
-  String suffix = " brd";
-  String except = "127.0.0.1";
-  try{
-    //BufferedReader stdInput = commandLine("sudo ip addr show");
-    BufferedReader stdInput = commandLine("ifconfig");
-    String returnedValues; 
-    while ( (returnedValues = stdInput.readLine ()) != null) {
-        if(returnedValues.contains(prefex) && !returnedValues.contains(except)){
-          String mIP = returnedValues.substring(prefex.length(),returnedValues.indexOf(suffix));
-          println("Host IP: "+ mIP);
-          return mIP;
-        }
+  
+  void handleOOCSIEvent(OOCSIEvent msg) {
+    // print out all values in message
+    print(msg.getString("sender_ip")+": ");
+    print(msg.getString("function")+"(");
+    println(msg.getString("io_msg")+")");
+    if(MODE==-1 || MODE==-3 || MODE==-4 || MODE==-5){
+      if(msg.getString("function").equals("reportFinish")){
+          numFinish++;
       }
-  } catch(Exception e) {
-    println("Error running command!");  
-    println(e);
-  }
-  return "false";
-}
-  public void handleOOCSIEvent(OOCSIEvent msg){
-    try{
-      print(msg.getString("sender_ip")+": ");
-      print(msg.getString("function")+"(");
-      println(msg.getString("io_msg")+")");
-    } catch(Exception e){
-      println("Next stage error");
+    } else if(MODE==2 && msg.getString("sender_ip").equals(Integer.toString(numFinish))){
+      numFinish++;
     }
-  }
+}
   
