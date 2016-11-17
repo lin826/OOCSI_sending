@@ -1,20 +1,31 @@
 
 import nl.tue.id.oocsi.*;
 import java.io.*;
+import processing.io.*;
 
   OOCSI oocsi;
   String server_ip = "oocsi.id.tue.nl";
   String my_ip="Server";
   
-  int MODE = 3;
+  int MODE = 0;
   int numFinish =0;
   int numTotal = 5;
   
   void setup(){
     connectOOCSI();
+    GPIO.pinMode(17, GPIO.INPUT); 
+    GPIO.pinMode(27, GPIO.INPUT); 
+    GPIO.pinMode(22, GPIO.INPUT); 
+    GPIO.pinMode(23, GPIO.INPUT);
+    GPIO.pinMode(24, GPIO.INPUT); 
   }
   
   void draw(){
+    if (GPIO.digitalRead(17) == GPIO.LOW) MODE=1;
+    else if (GPIO.digitalRead(27) == GPIO.LOW) MODE=2;
+    else if (GPIO.digitalRead(22) == GPIO.LOW) MODE=3;
+    else if (GPIO.digitalRead(23) == GPIO.LOW) MODE=4;
+    else if (GPIO.digitalRead(24) == GPIO.LOW) MODE=5;
     //String lines[] = loadStrings("../command");
     /*for (int i = 0 ; i < lines.length; i++) {
       String cmd[] = lines[i].split(":");
